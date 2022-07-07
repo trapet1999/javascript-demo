@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.staticfile.org/socket.io/4.5.1/socket.io.js"></script>
+  <!-- <script src="/socket.io/socket.io.js"></script> -->
+</head>
+<body>
+  hello server
+  <input type="text" id="msg" />
+  <button id="btn">发送</button>
+  <script>
+    var socket = io()
+    document.getElementById('btn').addEventListener('click', () => {
+      const value = document.getElementById('msg').value
+      // 触发服务端chatEvent事件并把value传过去
+      socket.emit('chatEvent', value)
+      document.getElementById('msg').value = ''
+    })
+    // 接收服务端的消息，必须是message
+    // socket.on('message', msg => console.log(msg))
+    // 客户端接收广播消息，也就是客户端能接收除了自己发送的
+    socket.on('ServerMsg', msg => console.log(msg))
+  </script>
+</body>
+</html>

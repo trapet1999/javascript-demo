@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.staticfile.org/vue/2.7.3/vue.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div v-if="isShow">
+        <input type="text" v-model="name" />
+        <button @click="enter()">进入聊天室</button>
+      </div>
+      <div v-else>
+        <ul>
+          <li v-for="(item, index) in lists" :key="'message'+index">
+            {{item}}
+          </li>
+        </ul>
+        <div class="ctrl">
+          <input type="text" v-model="message" />
+          <button @click="send()">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const app = new Vue({
+        el: '#app',
+        data: {
+          message: '',
+          lists: [],
+          ws: {},
+          name: '',
+          isShow: true,
+        },
+        mounted() {
+          this.ws = new WebSocket('ws://127.0.0.1:3005');
+          this.ws.onopen = this.onOpen;
+          this.ws.onmessage = this.onMessage;
+          this.ws.onclose = this.onClose;
+          this.ws.onerror = this.onError;
+        },
+        methods: {
+          onOpen() {
+            console.log('open:', this.ws.readyState);
+          },
+          onMessage(e) {
+            const obj = JSON.parse(e.data);
+            if (obj.event === 'enter') {
+              this.lists.push(`欢迎：${obj.message}加入聊天室`);
+            } else {
+              this.lists.push(obj.message);
+            }
+          },
+          // 当链接主动断开时候，触发close事件
+          onClose() {
+            console.log('close:', this.ws.readyState);
+            console.log('已关闭websocket');
+          },
+          // 连接失败时
+          onError() {
+            console.log('error:', this.ws.readyState);
+            console.log('websocket连接失败');
+          },
+          // 发送消息
+          send() {
+            this.ws.send(
+              JSON.stringify({
+                event: 'message',
+                message: this.message,
+              })
+            );
+            this.lists.push(this.message);
+            this.message = '';
+          },
+          enter() {
+            if (this.name.trim() === '') {
+              alert('用户名不得为空');
+              return;
+            }
+            this.isShow = false;
+            this.ws.send(
+              JSON.stringify({
+                event: 'enter',
+                message: this.name,
+              })
+            );
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
